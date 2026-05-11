@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #001a00;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            height: 100vh;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+        }
+
+        canvas#matrix {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 0;
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            width: 100%;
+        }
+
+        .triangle-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .label {
+            font-size: 1rem;
+            letter-spacing: 4px;
+            font-weight: bold;
+        }
+
+        .left-label {
+            color: #00ff41;
+            text-shadow: 0 0 10px #00ff41;
+        }
+
+        .right-label {
+            color: #ff2020;
+            text-shadow: 0 0 10px #ff2020;
+        }
+
+        .time-display {
+            font-size: 1.5rem;
+            font-weight: bold;
+            letter-spacing: 3px;
+            margin-top: 10px;
+        }
+
+        .left-time {
+            color: #00ff41;
+            text-shadow: 0 0 15px #00ff41;
+        }
+
+        .right-time {
+            color: #ff2020;
+            text-shadow: 0 0 15px #ff2020;
+        }
+
+        .center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            letter-spacing: 6px;
+            color: #00ff41;
+            text-shadow: 0 0 20px #00ff41;
+            text-align: center;
+        }
+
+        .done-text {
+            font-size: 1.2rem;
+            color: #00ff41;
+            display: none;
+            text-shadow: 0 0 10px #00ff41;
+            text-align: center;
+        }
+
+        /* Pin Button */
+        #pinBtn {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 999;
+            background: #00ff41;
+            color: #001a00;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 0 20px #00ff41;
+            font-family: 'Courier New', monospace;
+        }
+
+        #pinBtn:active {
+            transform: translateX(-50%) scale(0.95);
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="matrix"></canvas>
+
+    <div class="content">
+        <!-- LEFT TRIANGLE - Seconds -->
+        <div class="triangle-wrap">
+            <div class="label left-label">⏱ SECONDS</div>
+            <canvas id="leftCanvas" width="200" height="200"></canvas>
+            <div class="time-display left-time" id="leftTime">180s</div>
+        </div>
+
+        <!-- CENTER -->
+        <div class="center">
+            <h1>✨ WELCOME ✨</h1>
+            <div class="done-text" id="done">🎉 Timer Complete!<br>App ab close ho sakti hai!</div>
+        </div>
+
+        <!-- RIGHT TRIANGLE - Milliseconds -->
+        <div class="triangle-wrap">
+            <div class="label right-label">⚡ MS</div>
+            <canvas id="rightCanvas" width="200" height="200"></canvas>
+            <div class="time-display right-time" id="rightTime">180000ms</div>
+        </div>
+    </div>
+
+    <!-- Pin Button -->
+    <button id="pinBtn" onclick="pinScreen()">🔒 Screen Pin Karo</button>
+
+    <script>
+        // Screen Pinning
+        function pinScreen() {
+            if (window.AndroidInterface && window.AndroidInterface.pinScreen) {
+                window.AndroidInterface.pinScreen();
+            } else {
+                alert('Screen Pinning:\nSettings > Security > Screen Pinning ON karo\nPhir Recent Apps > Pin button dabao!');
+            }
+        }
+
+        // Matrix Rain
+        const matrix = document.getElementById('matrix');
+        const mctx = matrix.getContext('2d');
+        matrix.width = window.innerWidth;
+        matrix.height = window.innerHeight;
+        const chars = '01#$'.split('');
+        const fontSize = 14;
+        const columns = Math.floor(matrix.width / fontSize);
+        const drops = Array(columns).fill(1);
+        function drawMatrix() {
+            mctx.fillStyle = 'rgba(0,10,0,0.05)';
+            mctx.fillRect(0, 0, matrix.width, matrix.height);
+            mctx.fillStyle = '#00ff41';
+            mctx.font = fontSize + 'px monospace';
+            for (let i = 0; i < drops.length; i++) {
+                const char = chars[Math.floor(Math.random() * chars.length)];
+                mctx.fillText(char, i * fontSize, drops[i] * fontSize);
+                if (drops[i] * fontSize > matrix.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 35);
+
+        // Triangle
+        function drawTriangle(canvasId, fraction, timeText, color) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            const W = canvas.width, H = canvas.height;
+            ctx.clearRect(0, 0, W, H);
+            const cx = W / 2, top = 10, left = 10, right = W - 10, bottom = H - 10;
+
+            ctx.beginPath();
+            ctx.moveTo(cx, top);
+            ctx.lineTo(right, bottom);
+            ctx.lineTo(left, bottom);
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(0,0,0,0.4)';
+            ctx.fill();
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(cx, top);
+            ctx.lineTo(right, bottom);
+            ctx.lineTo(left, bottom);
+            ctx.closePath();
+            ctx.clip();
+            const fillHeight = H * fraction;
+            const gradient = ctx.createLinearGradient(0, bottom, 0, bottom - fillHeight);
+            gradient.addColorStop(0, color + 'cc');
+            gradient.addColorStop(1, color + '44');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, bottom - fillHeight, W, fillHeight);
+            ctx.restore();
+
+            ctx.beginPath();
+            ctx.moveTo(cx, top);
+            ctx.lineTo(right, bottom);
+            ctx.lineTo(left, bottom);
+            ctx.closePath();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 20;
+            ctx.stroke();
+
+            ctx.fillStyle = color;
+            ctx.font = 'bold 20px Courier New';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowBlur = 15;
+            ctx.fillText(timeText, cx, bottom - 40);
+            ctx.shadowBlur = 0;
+        }
+
+        // Timer
+        const TOTAL_MS = 3 * 60 * 1000;
+        const startTime = Date.now();
+
+        function update() {
+            const elapsed = Date.now() - startTime;
+            const remainingMs = Math.max(0, TOTAL_MS - elapsed);
+            const remainingSec = Math.ceil(remainingMs / 1000);
+            const fraction = remainingMs / TOTAL_MS;
+
+            document.getElementById('leftTime').textContent = remainingSec + 's';
+            drawTriangle('leftCanvas', fraction, remainingSec + 's', '#00ff41');
+
+            document.getElementById('rightTime').textContent = remainingMs + 'ms';
+            drawTriangle('rightCanvas', fraction, remainingMs + 'ms', '#ff2020');
+
+            if (remainingMs <= 0) {
+                document.getElementById('done').style.display = 'block';
+                document.getElementById('pinBtn').style.display = 'none';
+                return;
+            }
+            requestAnimationFrame(update);
+        }
+
+        update();
+
+        // Keep screen awake
+        async function keepAwake() {
+            try {
+                if ('wakeLock' in navigator) {
+                    await navigator.wakeLock.request('screen');
+                }
+            } catch (e) { }
+        }
+        keepAwake();
+    </script>
+</body>
+
+</html>
