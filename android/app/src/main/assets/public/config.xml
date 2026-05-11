@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<widget xmlns="http://www.w3.org/ns/widgets"
+    id="com.timer.app"
+    version="1.0.0">
+    <name>TimerApp</name>
+    <description>3 Minute Matrix Timer</description>
+    <author>Villan</author>
+    <content src="index.html"/>
+    <preference name="fullscreen" value="true"/>
+    <preference name="orientation" value="landscape"/>
+</widget>
